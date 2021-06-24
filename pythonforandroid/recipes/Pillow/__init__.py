@@ -51,7 +51,7 @@ class PillowRecipe(CompiledComponentsPythonRecipe):
         env['LDFLAGS'] += ' -L{} -L{} -L{} -L{}'.format(
             png_lib_dir, harf_lib_dir, jpeg_lib_dir, ndk_lib_dir)
         if cflags not in env['CFLAGS']:
-            env['CFLAGS'] += cflags
+            env['CFLAGS'] += cflags  + " -lm"
         return env
 
 
