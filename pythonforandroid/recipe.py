@@ -3,6 +3,13 @@ import glob
 from shutil import rmtree
 from six import with_metaclass
 
+# avoid ssl errors
+import certifi
+
+import sys
+# TODO undo this when certificates are working for all sources
+ssl._create_default_https_context = ssl._create_unverified_context
+
 import hashlib
 from re import match
 
@@ -182,6 +189,8 @@ class Recipe(with_metaclass(RecipeMeta)):
         if not url:
             return
         info('Downloading {} from {}'.format(self.name, url))
+        info('Certifi version = %s ; python version %s ; located %s', certifi.__version__, sys.version, sys.executable)
+        
 
         if cwd:
             target = join(cwd, target)
