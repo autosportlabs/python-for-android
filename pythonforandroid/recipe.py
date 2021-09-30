@@ -8,6 +8,7 @@ import certifi
 
 import sys
 # TODO undo this when certificates are working for all sources
+import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
 import hashlib
