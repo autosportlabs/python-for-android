@@ -15,17 +15,19 @@
 #     Use 'docker run' without '--rm' flag for keeping the container and use
 #     'docker commit <container hash> <new image>' to extend the original image
 
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # configure locale
-RUN apt update -qq > /dev/null && apt install -qq --yes --no-install-recommends \
+RUN apt -y update -qq > /dev/null \
+    && DEBIAN_FRONTEND=noninteractive apt install -qq --yes --no-install-recommends \
     locales && \
     locale-gen en_US.UTF-8
 ENV LANG="en_US.UTF-8" \
     LANGUAGE="en_US.UTF-8" \
     LC_ALL="en_US.UTF-8"
 
-RUN apt -y update -qq > /dev/null && apt -y install -qq --no-install-recommends \
+RUN apt -y update -qq > /dev/null \
+    && DEBIAN_FRONTEND=noninteractive apt install -qq --yes --no-install-recommends \
 	ca-certificates \
     curl \
     && apt -y autoremove \
@@ -43,13 +45,13 @@ ENV HOME_DIR="/home/${USER}"
 ENV WORK_DIR="${HOME_DIR}/app" \
     PATH="${HOME_DIR}/.local/bin:${PATH}" \
     ANDROID_HOME="${HOME_DIR}/.android" \
-    JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+    JAVA_HOME="/usr/lib/jvm/java-13-openjdk-amd64"
 
 
 # install system dependencies
 RUN dpkg --add-architecture i386 \
     && ${RETRY} apt -y update -qq > /dev/null \
-    && ${RETRY} apt -y install -qq --no-install-recommends \
+    && ${RETRY} DEBIAN_FRONTEND=noninteractive apt install -qq --yes --no-install-recommends \
     autoconf \
     automake \
     autopoint \
@@ -64,12 +66,10 @@ RUN dpkg --add-architecture i386 \
     libidn11:i386 \
     libltdl-dev \
     libncurses5:i386 \
-    libpangox-1.0-0:i386 \
-    libpangoxft-1.0-0:i386 \
     libssl-dev \
     libstdc++6:i386 \
     libtool \
-    openjdk-8-jdk \
+    openjdk-13-jdk \
     patch \
     pkg-config \
     python3 \
@@ -98,8 +98,8 @@ RUN mkdir ${ANDROID_HOME} && chown --recursive ${USER} ${HOME_DIR} ${ANDROID_HOM
 USER ${USER}
 
 # Download and install android's NDK/SDK
-COPY ci/makefiles/android.mk /tmp/android.mk
-RUN make --file /tmp/android.mk target_os=linux \
+COPY --chown=user:user ci/makefiles/android.mk /tmp/android.mk
+RUN make --file /tmp/android.mk \
     && sudo rm /tmp/android.mk
 
 # install python-for-android from current branch

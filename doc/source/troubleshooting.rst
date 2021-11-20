@@ -72,7 +72,7 @@ particular.
 Unpacking an APK
 ----------------
 
-It is sometimes useful to unpack a pacakged APK to see what is inside,
+It is sometimes useful to unpack a packaged APK to see what is inside,
 especially when debugging python-for-android itself.
 
 APKs are just zip files, so you can extract the contents easily::
@@ -145,40 +145,6 @@ the build (e.g. if buildozer was previously used). Removing this
 directory should fix the problem, and is desirable anyway since you
 don't want it in the APK.
 
-Errors related to Java version
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The errors listed below are related to Java version mismatch, it should be
-fixed by installing Java 8.
-
-- :code:`java.lang.UnsupportedClassVersionError: com/android/dx/command/Main`
-- :code:`java.lang.NoClassDefFoundError: sun/misc/BASE64Encoder`
-- :code:`java.lang.NoClassDefFoundError: javax/xml/bind/annotation/XmlSchema`
-
-On Ubuntu fix it my making sure only the :code:`openjdk-8-jdk` package is installed::
-
-    apt remove --purge openjdk-*-jdk
-    apt install openjdk-8-jdk
-
-In the similar fashion for macOS you need to install the :code:`java8` package::
-
-    brew cask install java8
-
-
-JNI DETECTED ERROR IN APPLICATION: static jfieldID 0x0000000 not valid for class java.lang.Class<org.renpy.android.PythonActivity>
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This error appears in the logcat log if you try to access
-``org.renpy.android.PythonActivity`` from within the new toolchain. To
-fix it, change your code to reference
-``org.kivy.android.PythonActivity`` instead.
-
-websocket-client: if you see errors relating to 'SSL not available'
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Ensure you have the package backports.ssl-match-hostname in the buildozer requirements, since Kivy targets python 2.7.x
-
-You may also need sslopt={"cert_reqs": ssl.CERT_NONE} as a parameter to ws.run_forever() if you get an error relating to host verification
-
 Requested API target 19 is not available, install it with the SDK android tool
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -197,3 +163,20 @@ ModuleNotFoundError: No module named '_ctypes'
 You do not have the libffi headers available to python-for-android, so you need to install them. On Ubuntu and derivatives these come from the `libffi-dev` package.
 
 After installing the headers, clean the build (`p4a clean builds`, or with buildozer delete the `.buildozer` directory within your app directory) and run python-for-android again.
+
+SSLError("Can't connect to HTTPS URL because the SSL module is not available.")
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Your `hostpython3` was compiled without SSL support. You need to install the SSL development files before rebuilding the `hostpython3` recipe.
+Remember to always clean the build before rebuilding (`p4a clean builds`, or with buildozer `buildozer android clean`).
+
+On Ubuntu and derivatives::
+
+    apt install libssl-dev
+    p4a clean builds # or with: buildozer `buildozer android clean
+
+On macOS::
+
+    brew install openssl
+    sudo ln -sfn /usr/local/opt/openssl /usr/local/ssl
+    p4a clean builds # or with: buildozer `buildozer android clean

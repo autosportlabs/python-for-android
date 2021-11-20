@@ -145,9 +145,9 @@ class Arch:
             + " ".join(
                 [
                     "-L'"
-                    + l.replace("'", "'\"'\"'")
+                    + link_path.replace("'", "'\"'\"'")
                     + "'"  # no shlex.quote in py2
-                    for l in self.extra_global_link_paths
+                    for link_path in self.extra_global_link_paths
                 ]
             )
             + ' ' + ' '.join(self.common_ldflags).format(
@@ -233,6 +233,12 @@ class Arch:
         )
 
         env['PATH'] = environ['PATH']
+
+        # for reproducible builds
+        if 'SOURCE_DATE_EPOCH' in environ:
+            for k in 'LC_ALL TZ SOURCE_DATE_EPOCH PYTHONHASHSEED BUILD_DATE BUILD_TIME'.split():
+                if k in environ:
+                    env[k] = environ[k]
 
         return env
 

@@ -199,9 +199,9 @@ def shprint(command, *args, **kwargs):
                           re_filter_in=None, re_filter_out=None):
                 lines = out.splitlines()
                 if re_filter_in is not None:
-                    lines = [l for l in lines if re_filter_in.search(l)]
+                    lines = [line for line in lines if re_filter_in.search(line)]
                 if re_filter_out is not None:
-                    lines = [l for l in lines if not re_filter_out.search(l)]
+                    lines = [line for line in lines if not re_filter_out.search(line)]
                 if tail_n == 0 or len(lines) <= tail_n:
                     info('{}:\n{}\t{}{}'.format(
                         name, forecolor, '\t\n'.join(lines), Out_Fore.RESET))
@@ -214,17 +214,18 @@ def shprint(command, *args, **kwargs):
                       re.compile(filter_in) if filter_in else None,
                       re.compile(filter_out) if filter_out else None)
             printtail(err.stderr.decode('utf-8'), 'STDERR', Err_Fore.RED)
-        if is_critical:
-            env = kwargs.get("env")
+        if is_critical or full_debug:
+            env = kwargs.get("_env")
             if env is not None:
                 info("{}ENV:{}\n{}\n".format(
                     Err_Fore.YELLOW, Err_Fore.RESET, "\n".join(
-                        "set {}={}".format(n, v) for n, v in env.items())))
+                        "export {}='{}'".format(n, v) for n, v in env.items())))
             info("{}COMMAND:{}\ncd {} && {} {}\n".format(
                 Err_Fore.YELLOW, Err_Fore.RESET, os.getcwd(), command,
                 ' '.join(args)))
             warning("{}ERROR: {} failed!{}".format(
                 Err_Fore.RED, command, Err_Fore.RESET))
+        if is_critical:
             exit(1)
         else:
             raise
