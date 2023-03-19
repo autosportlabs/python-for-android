@@ -46,11 +46,10 @@ public class PythonActivity extends Activity {
     }
 
     public String getEntryPoint(String search_dir) {
-        /* Get the main file (.pyc|.pyo|.py) depending on if we
+        /* Get the main file (.pyc|.py) depending on if we
          * have a compiled version or not.
         */
         List<String> entryPoints = new ArrayList<String>();
-        entryPoints.add("main.pyo");  // python 2 compiled files
         entryPoints.add("main.pyc");  // python 3 compiled files
 		for (String value : entryPoints) {
             File mainFile = new File(search_dir + "/" + value);
@@ -177,19 +176,22 @@ public class PythonActivity extends Activity {
             new File(getApplicationInfo().nativeLibraryDir));
     }
 
-    long lastBackClick = SystemClock.elapsedRealtime();
+    long lastBackClick = 0;
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // If it wasn't the Back key or there's no web page history, bubble up to the default
-        // system behavior (probably exit the activity)
-        if (SystemClock.elapsedRealtime() - lastBackClick > 2000){
+        // Check if the key event was the Back button
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            // If there's no web page history, bubble up to the default
+            // system behavior (probably exit the activity)
+            if (SystemClock.elapsedRealtime() - lastBackClick > 2000){
+                lastBackClick = SystemClock.elapsedRealtime();
+                Toast.makeText(this, "Tap again to close the app", Toast.LENGTH_LONG).show();
+                return true;
+            }
+
             lastBackClick = SystemClock.elapsedRealtime();
-            Toast.makeText(this, "Click again to close the app",
-            Toast.LENGTH_LONG).show();
-            return true;
         }
 
-        lastBackClick = SystemClock.elapsedRealtime();
         return super.onKeyDown(keyCode, event);
     }
 

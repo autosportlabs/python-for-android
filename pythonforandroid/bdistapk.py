@@ -43,6 +43,9 @@ class Bdist(Command):
                 if option == 'permissions':
                     for perm in value:
                         sys.argv.append('--permission={}'.format(perm))
+                elif option == 'orientation':
+                    for orient in value:
+                        sys.argv.append('--orientation={}'.format(orient))
                 elif value in (None, 'None'):
                     sys.argv.append('--{}'.format(option))
                 else:
@@ -108,7 +111,7 @@ class Bdist(Command):
                     makedirs(new_dir)
                 print('Including {}'.format(filen))
                 copyfile(filen, join(bdist_dir, filen))
-                if basename(filen) in ('main.py', 'main.pyo'):
+                if basename(filen) in ('main.py', 'main.pyc'):
                     main_py_dirs.append(filen)
 
         # This feels ridiculous, but how else to define the main.py dir?
@@ -159,6 +162,7 @@ def _set_user_options():
 
     BdistAPK.user_options = user_options
     BdistAAB.user_options = user_options
+    BdistAAR.user_options = user_options
 
 
 _set_user_options()

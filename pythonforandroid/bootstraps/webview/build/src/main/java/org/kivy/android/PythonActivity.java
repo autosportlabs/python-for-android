@@ -32,6 +32,7 @@ import android.graphics.Color;
 import android.widget.AbsoluteLayout;
 import android.view.ViewGroup.LayoutParams;
 
+import android.webkit.WebBackForwardList;
 import android.webkit.WebViewClient;
 import android.webkit.WebView;
 import android.webkit.CookieManager;
@@ -67,11 +68,10 @@ public class PythonActivity extends Activity {
     }
 
     public String getEntryPoint(String search_dir) {
-        /* Get the main file (.pyc|.pyo|.py) depending on if we
+        /* Get the main file (.pyc|.py) depending on if we
          * have a compiled version or not.
         */
         List<String> entryPoints = new ArrayList<String>();
-        entryPoints.add("main.pyo");  // python 2 compiled files
         entryPoints.add("main.pyc");  // python 3 compiled files
         for (String value : entryPoints) {
             File mainFile = new File(search_dir + "/" + value);
@@ -269,24 +269,30 @@ public class PythonActivity extends Activity {
         return   mLayout;
     }
 
-    long lastBackClick = SystemClock.elapsedRealtime();
+    long lastBackClick = 0;
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Check if the key event was the Back button and if there's history
-        if ((keyCode == KeyEvent.KEYCODE_BACK) && mWebView.canGoBack()) {
-            mWebView.goBack();
-            return true;
-        }
-        // If it wasn't the Back key or there's no web page history, bubble up to the default
-        // system behavior (probably exit the activity)
-        if (SystemClock.elapsedRealtime() - lastBackClick > 2000){
+        // Check if the key event was the Back button
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            // Go back if there is web page history behind,
+            // but not to the start preloader
+            WebBackForwardList webViewBackForwardList = mWebView.copyBackForwardList();
+            if (webViewBackForwardList.getCurrentIndex() > 1) {
+                mWebView.goBack();
+                return true;
+            }
+
+            // If there's no web page history, bubble up to the default
+            // system behavior (probably exit the activity)
+            if (SystemClock.elapsedRealtime() - lastBackClick > 2000){
+                lastBackClick = SystemClock.elapsedRealtime();
+                Toast.makeText(this, "Tap again to close the app", Toast.LENGTH_LONG).show();
+                return true;
+            }
+
             lastBackClick = SystemClock.elapsedRealtime();
-            Toast.makeText(this, "Click again to close the app",
-            Toast.LENGTH_LONG).show();
-            return true;
         }
 
-        lastBackClick = SystemClock.elapsedRealtime();
         return super.onKeyDown(keyCode, event);
     }
 
