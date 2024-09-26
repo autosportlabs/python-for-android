@@ -28,6 +28,12 @@ class FFMpegRecipe(Recipe):
             cflags = []
             ldflags = []
 
+            # enable hardware acceleration codecs
+            flags = [
+                '--enable-jni',
+                '--enable-mediacodec'
+            ]
+
             if 'openssl' in self.ctx.recipe_build_order:
                 flags += [
                     '--enable-openssl',
@@ -83,12 +89,6 @@ class FFMpegRecipe(Recipe):
                     '--enable-muxer=h264,mov,mp4,mpeg2video',
                     '--enable-demuxer=aac,h264,m4v,mov,mpegvideo,vc1,rtsp',
                 ]
-
-            # enable hardware acceleration codecs
-            flags = [
-                '--enable-jni',
-                '--enable-mediacodec'
-            ]
 
             # needed to prevent _ffmpeg.so: version node not found for symbol av_init_packet@LIBAVFORMAT_52
             # /usr/bin/ld: failed to set dynamic section sizes: Bad value
