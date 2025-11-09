@@ -59,6 +59,9 @@ class PillowRecipe(PyProjectRecipe):
                 webp.get_build_dir(arch.arch), 'installation'
             )
             env["WEBP_ROOT"] = f"{join(webp_install, 'lib')}:{join(webp_install, 'include')}"
+        
+        env["LDFLAGS"] = (env.get("LDFLAGS", "") + " -lm").strip()
+        
         return env
 
 
