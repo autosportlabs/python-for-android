@@ -868,21 +868,28 @@ def run_pymodules_install(ctx, arch, modules, project_dir=None,
     # Use our hostpython to create the virtualenv
     host_python = sh.Command(ctx.hostpython)
     with current_directory(join(ctx.build_dir)):
+        if exists('venv'):
+            info('Removing stale Python module install virtualenv')
+            shutil.rmtree('venv')
         shprint(host_python, '-m', 'venv', 'venv')
 
-        # Prepare base environment and upgrade pip:
-        base_env = dict(copy.copy(os.environ))
-        base_env["PYTHONPATH"] = ctx.get_site_packages_dir(arch)
+        # Prepare an isolated environment and upgrade pip:
+        bootstrap_env = dict(copy.copy(os.environ))
+        bootstrap_env.pop("PYTHONPATH", None)
         info('Upgrade pip to latest version')
         shprint(sh.bash, '-c', (
-            "source venv/bin/activate && pip install -U pip"
-        ), _env=copy.copy(base_env))
+            "venv/bin/python -m pip install -U pip"
+        ), _env=copy.copy(bootstrap_env))
 
         # Install Cython in case modules need it to build:
         info('Install Cython in case one of the modules needs it to build')
         shprint(sh.bash, '-c', (
-            "venv/bin/pip install Cython"
-        ), _env=copy.copy(base_env))
+            "venv/bin/python -m pip install Cython"
+        ), _env=copy.copy(bootstrap_env))
+
+        # Prepare base environment for cross-compiled module installs.
+        base_env = dict(copy.copy(os.environ))
+        base_env["PYTHONPATH"] = ctx.get_site_packages_dir(arch)
 
         # Get environment variables for build (with CC/compiler set):
         standard_recipe = CythonRecipe()
@@ -925,7 +932,7 @@ def run_pymodules_install(ctx, arch, modules, project_dir=None,
             )
 
             shprint(sh.bash, '-c', (
-                "venv/bin/pip " +
+                "venv/bin/python -m pip " +
                 "install -v --target '{0}' --no-deps -r requirements.txt"
             ).format(ctx.get_site_packages_dir(arch).replace("'", "'\"'\"'")),
                     _env=copy.copy(env))
