@@ -1,5 +1,5 @@
 from pythonforandroid.recipe import PyProjectRecipe, Recipe
-from os.path import join
+from os.path import exists, join
 
 
 class FFPyPlayerRecipe(PyProjectRecipe):
@@ -31,9 +31,11 @@ class FFPyPlayerRecipe(PyProjectRecipe):
         env['NDKPLATFORM'] = "NOTNONE"
         env['LIBLINK'] = 'NOTNONE'
 
-        # ffmpeg recipe enables GPL components only if ffpyplayer_codecs recipe used.
-        # Therefore we need to disable libpostproc if skipped.
-        if 'ffpyplayer_codecs' not in self.ctx.recipe_build_order:
+        # ffpyplayer can use libpostproc when ffmpeg provides it, but codec
+        # builds do not always install the postproc header/library.
+        postproc_header = join(build_dir, "include", "libpostproc", "postprocess.h")
+        postproc_lib = join(build_dir, "lib", "libpostproc.so")
+        if not exists(postproc_header) or not exists(postproc_lib):
             env["CONFIG_POSTPROC"] = '0'
 
         return env
