@@ -1,27 +1,15 @@
 from pythonforandroid.toolchain import Recipe, current_directory, shprint
 from os.path import exists, join, realpath
 import sh
-from multiprocessing import cpu_count
 
 
 class FFMpegRecipe(Recipe):
-    version = '8.0.1'
+    version = 'n6.1.2'
     # Moved to github.com instead of ffmpeg.org to improve download speed
-    url = 'https://www.ffmpeg.org/releases/ffmpeg-{version}.tar.xz'
-    depends = [('sdl2', 'sdl3')]  # Need this to build correct recipe order
+    url = 'https://github.com/FFmpeg/FFmpeg/archive/{version}.zip'
+    depends = ['sdl2']  # Need this to build correct recipe order
     opts_depends = ['openssl', 'ffpyplayer_codecs', 'av_codecs']
-    patches = ['patches/configure.patch', 'patches/backport-Android15-MediaCodec-fix.patch']
-    _libs = [
-        "libavcodec.so",
-        "libavfilter.so",
-        "libavutil.so",
-        "libswscale.so",
-        "libavdevice.so",
-        "libavformat.so",
-        "libswresample.so",
-        "libffmpegbin.so",
-    ]
-    built_libraries = dict.fromkeys(_libs, "./lib")
+    patches = ['patches/configure.patch']
 
     def should_build(self, arch):
         build_dir = self.get_build_dir(arch.arch)
@@ -48,15 +36,15 @@ class FFMpegRecipe(Recipe):
 
             if 'openssl' in self.ctx.recipe_build_order:
                 flags += [
-                    '--enable-version3',
                     '--enable-openssl',
                     '--enable-nonfree',
                     '--enable-protocol=https,tls_openssl',
                 ]
                 build_dir = Recipe.get_recipe(
                     'openssl', self.ctx).get_build_dir(arch.arch)
-                cflags += ['-I' + build_dir + '/include/']
-                ldflags += ['-L' + build_dir, '-lssl', '-lcrypto']
+                cflags += ['-I' + build_dir + '/include/',
+                           '-DOPENSSL_API_COMPAT=0x10002000L']
+                ldflags += ['-L' + build_dir]
 
             codecs_opts = {"ffpyplayer_codecs", "av_codecs"}
             if codecs_opts.intersection(self.ctx.recipe_build_order):
@@ -110,8 +98,9 @@ class FFMpegRecipe(Recipe):
                 '--disable-symver',
             ]
 
-            # disable doc
+            # disable binaries / doc
             flags += [
+                '--disable-programs',
                 '--disable-doc',
             ]
 
@@ -142,7 +131,6 @@ class FFMpegRecipe(Recipe):
                 '--cross-prefix={}-'.format(arch.target),
                 '--arch={}'.format(arch_flag),
                 '--strip={}'.format(self.ctx.ndk.llvm_strip),
-                '--nm={}'.format(self.ctx.ndk.llvm_nm),
                 '--sysroot={}'.format(self.ctx.ndk.sysroot),
                 '--enable-neon',
                 '--prefix={}'.format(realpath('.')),
@@ -150,7 +138,6 @@ class FFMpegRecipe(Recipe):
 
             if arch_flag == 'arm':
                 cflags += [
-                    '-Wno-error=incompatible-pointer-types',
                     '-mfpu=vfpv3-d16',
                     '-mfloat-abi=softfp',
                     '-fPIC',
@@ -161,9 +148,11 @@ class FFMpegRecipe(Recipe):
 
             configure = sh.Command('./configure')
             shprint(configure, *flags, _env=env)
-            shprint(sh.make, '-j', f"{cpu_count()}", _env=env)
+            shprint(sh.make, '-j4', _env=env)
             shprint(sh.make, 'install', _env=env)
-            shprint(sh.cp, "ffmpeg", "./lib/libffmpegbin.so")
+            # copy libs:
+            sh.cp('-a', sh.glob('./lib/lib*.so'),
+                  self.ctx.get_libs_dir(arch.arch))
 
 
 recipe = FFMpegRecipe()
