@@ -7,6 +7,7 @@ class PyAVRecipe(PyProjectRecipe):
     name = "av"
     version = "17.0.0"
     url = "https://github.com/PyAV-Org/PyAV/archive/v{version}.zip"
+    patches = ["libs.patch"]
     depends = ["python3", "ffmpeg", "av_codecs", "openssl"]
     hostpython_prerequisites = ["cython>=3.1.0"]
 
