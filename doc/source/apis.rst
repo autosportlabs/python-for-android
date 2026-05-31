@@ -5,6 +5,40 @@ Working on Android
 This page gives details on accessing Android APIs and managing other
 interactions on Android.
 
+Handling system bars and Edge-to-Edge enforcement
+-------------------------------------------------
+
+**Egde-to-Edge is enforced on all android apis >=35 by default i.e. Android 15 and above.**
+
+You can control the overall layout and system bars appearance in following ways::
+
+      from android.display_cutout import update_system_ui
+      
+      update_system_ui(
+            "#0f62fe", # status_bar_color: hex color code or rgba (tuple or list) values
+            [0.059, 0.384, 0.996, 1.000], # navigation_bar_color: hex color code or rgba (tuple or list) values
+            "Light", # icon_style: "Dark" means dark icons will be drawn, "Light" means light icons will be drawn, Literal["Dark", or "Light"]
+            True, # pad_status: Adds a padding to top of content_view, Will take effect on Android 15+
+            True, # pad_nav: Adds a padding to bottom of content_view, Will take effect on Android 15+
+      )
+
+
+Handling Immersive Mode
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Immersive mode allows your application to hide the system bars (status bar and navigation bar) for a true full-screen experience, commonly used in games or media players.
+
+You can control the immersive mode behavior and how system bars reappear using the following way::
+
+    from android.display_cutout import set_immersive_mode
+
+    set_immersive_mode(
+        False, # hide_status: True explicitly targets hiding the top status bar, False leaves it visible
+        False, # hide_nav: True explicitly targets hiding the bottom navigation bar/gestural pill, False leaves it visible
+        True, # remove_contrast: True disables the default system-enforced background scrim/contrast behind the bars, ensuring complete transparency when they peek
+    )
+
+
 Storage paths
 -------------
 
