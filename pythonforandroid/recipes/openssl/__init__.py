@@ -15,11 +15,11 @@ class OpenSSLRecipe(Recipe):
         - crypto
         - ssl
 
-    The generated openssl libraries are versioned, where the version is the
-    recipe attribute :attr:`version` e.g.: ``libcrypto1.1.so``,
-    ``libssl1.1.so``...so...to link your recipe with the openssl libs,
+    The generated openssl libraries are versioned using the OpenSSL major
+    version, e.g.: ``libcrypto3.so``, ``libssl3.so``...so...to link your
+    recipe with the openssl libs,
     remember to add the version at the end, e.g.:
-    ``-lcrypto1.1 -lssl1.1``. Or better, you could do it dynamically
+    ``-lcrypto3 -lssl3``. Or better, you could do it dynamically
     using the methods: :meth:`include_flags`, :meth:`link_dirs_flags` and
     :meth:`link_libs_flags`.
 
@@ -46,16 +46,18 @@ class OpenSSLRecipe(Recipe):
     '''
 
     version = '3.3.1'
+    major_version = version.split('.')[0]
     url = 'https://www.openssl.org/source/openssl-{version}.tar.gz'
+    patches = ['versioned-libraries.patch']
 
     built_libraries = {
-        'libcrypto.so': '.',
-        'libssl.so': '.',
+        'libcrypto{version}.so'.format(version=major_version): '.',
+        'libssl{version}.so'.format(version=major_version): '.',
     }
 
     def get_build_dir(self, arch):
         return join(
-            self.get_build_container_dir(arch), self.name + self.version[0]
+            self.get_build_container_dir(arch), self.name + self.major_version
         )
 
     def include_flags(self, arch):
@@ -74,7 +76,9 @@ class OpenSSLRecipe(Recipe):
         '''Returns a string with the appropriate `-l<lib>` flags to link with
         the openssl libs. This string is usually added to the environment
         variable `LIBS`'''
-        return ' -lcrypto -lssl'
+        return ' -lcrypto{version} -lssl{version}'.format(
+            version=self.major_version
+        )
 
     def link_flags(self, arch):
         '''Returns a string with the flags to link with the openssl libraries
@@ -83,7 +87,7 @@ class OpenSSLRecipe(Recipe):
 
     def get_recipe_env(self, arch=None):
         env = super().get_recipe_env(arch)
-        env['OPENSSL_VERSION'] = self.version[0]
+        env['OPENSSL_VERSION'] = self.major_version
         env['CC'] = 'clang'
         env['ANDROID_NDK_ROOT'] = self.ctx.ndk_dir
         env["PATH"] = f"{self.ctx.ndk.llvm_bin_dir}:{env['PATH']}"

@@ -1,0 +1,12 @@
+diff --git a/Configurations/15-android.conf b/Configurations/15-android.conf
+--- a/Configurations/15-android.conf
++++ b/Configurations/15-android.conf
+@@ -192,7 +192,7 @@ my %targets = (
+         bin_cflags       => "-fPIE",
+         bin_lflags       => "-pie",
+         enable           => [ ],
+-        shared_extension => ".so",
++        shared_extension => "3.so",
+     },
+     "android-arm" => {
+         ################################################################

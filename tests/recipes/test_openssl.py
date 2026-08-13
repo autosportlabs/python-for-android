@@ -33,8 +33,14 @@ class TestOpensslRecipe(BaseTestForMakeRecipe, unittest.TestCase):
     def test_link_flags(self):
         build_dir = self.recipe.get_build_dir(self.arch)
         self.assertEqual(
-            f" -L{build_dir} -lcrypto -lssl",
+            f" -L{build_dir} -lcrypto3 -lssl3",
             self.recipe.link_flags(self.arch),
+        )
+
+    def test_built_libraries_use_versioned_names(self):
+        self.assertEqual(
+            {"libcrypto3.so": ".", "libssl3.so": "."},
+            self.recipe.built_libraries,
         )
 
     def test_select_build_arch(self):
