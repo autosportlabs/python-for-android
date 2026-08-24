@@ -4,6 +4,7 @@ from unittest import mock
 
 import jinja2
 
+from pythonforandroid import build
 from pythonforandroid.build import (
     Context, RECOMMENDED_TARGET_API, run_pymodules_install, process_python_modules, is_wheel_compatible
 )
@@ -26,6 +27,41 @@ class TestBuildBasic(unittest.TestCase):
             assert run_pymodules_install(ctx, ctx.archs[0], modules, project_dir) is None
         assert m_info.call_args_list[-1] == mock.call(
             'No Python modules and no setup.py to process, skipping')
+
+    @mock.patch('pythonforandroid.build.shprint')
+    @mock.patch('pythonforandroid.build.project_has_setup_py', return_value=False)
+    @mock.patch('pythonforandroid.build.process_python_modules')
+    def test_strip_if_with_debug_symbols(
+            self, mock_process_modules, mock_project_has_setup_py,
+            mock_shprint):
+        ctx = mock.Mock(recipe_build_order=[], with_debug_symbols=False)
+        ctx.get_site_packages_dir.return_value = '/tmp/python-install'
+        arch = mock.Mock()
+        arch_env = {'STRIP': '/ndk/bin/llvm-strip --some-argument'}
+        arch.get_env.return_value = arch_env
+        mock_process_modules.return_value = (
+            ['example-module'],
+            (mock.sentinel.pip, [], [], mock.sentinel.pip_env),
+        )
+
+        run_pymodules_install(ctx, arch, [], None)
+
+        strip_call = mock.call(
+            build.sh.find, '/tmp/python-install', '-iname', '*.so',
+            '-exec', '/ndk/bin/llvm-strip',
+            '--strip-unneeded', '{}', ';',
+            _env=arch_env,
+        )
+        assert strip_call in mock_shprint.call_args_list
+
+        mock_shprint.reset_mock()
+        ctx.with_debug_symbols = True
+        run_pymodules_install(ctx, arch, [], None)
+
+        assert not any(
+            call.args[0] == build.sh.find
+            for call in mock_shprint.call_args_list
+        )
 
     def test_python_module_parser(self):
         ctx = mock.Mock(recipe_build_order=[])
