@@ -794,7 +794,7 @@ def run_pymodules_install(ctx, arch, modules, project_dir=None,
     if not ctx.with_debug_symbols and arch_env.get("STRIP", None) is not None:
         info('Stripping object files')
         shprint(
-            sh.find, '.', '-iname', '*.so',
+            sh.find, ctx.get_site_packages_dir(arch), '-iname', '*.so',
             '-exec', arch_env['STRIP'].split(' ')[0],
             '--strip-unneeded', '{}', ';',
             _env=arch_env,
