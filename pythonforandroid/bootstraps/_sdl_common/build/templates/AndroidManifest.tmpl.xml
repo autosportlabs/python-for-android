@@ -56,7 +56,8 @@
                  {{ args.extra_manifest_application_arguments }}
                  android:theme="{{args.android_apptheme}}{% if not args.window %}.Fullscreen{% endif %}"
                  android:hardwareAccelerated="true"
-                 android:extractNativeLibs="true" >
+                 android:extractNativeLibs="true"
+                 {% if android_api|int >= 33 %}android:enableOnBackInvokedCallback="false"{% endif %} >
         {% for l in args.android_used_libs %}
         <uses-library android:name="{{ l }}" />
         {% endfor %}
